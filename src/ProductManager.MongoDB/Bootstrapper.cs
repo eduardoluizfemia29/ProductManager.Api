@@ -13,7 +13,6 @@ namespace ProductManager.MongoDB
 
             services.AddSingleton<IMongoClient>(new MongoClient(mongoDbSettings.ConnectionString));
             services.AddTransient(typeof(IBaseRepository<>), typeof(BaseRepository<>));
-            //services.AddTransient<IFriendRepository, FriendRepository>();
             services.AddSingleton(mongoDbSettings);
 
             return services;
