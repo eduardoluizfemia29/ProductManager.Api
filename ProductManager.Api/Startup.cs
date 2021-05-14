@@ -1,15 +1,16 @@
+using AutoMapper;
+using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Logging;
+using ProductManager.Api.Swagger;
+using ProductManager.CrossCutting.Notification;
+using ProductManager.MongoDB;
+using Serilog;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ProductManager.Api
 {
@@ -25,7 +26,32 @@ namespace ProductManager.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddControllers()
+                /*.AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<CreateFriendCommandValidator>())*/;
+
+            services.AddCors(options => options.AddPolicy("CorsPolicy", policy =>
+            {
+                policy
+                    .AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod().Build();
+            }));
+
+            Log.Logger = new LoggerConfiguration()
+                .Enrich.FromLogContext()
+                .WriteTo.Console()
+                .MinimumLevel.Information()
+                .CreateLogger();
+
+            services.AddScoped<INotificationContext, NotificationContext>();
+
+            var assemblyPath = GetType().Assembly.Location;
+            var assembly = AppDomain.CurrentDomain.Load("ProductManager.Domain");
+
+            services.UseMongoDb(Configuration);
+            services.AddSwagger(Configuration, assemblyPath);
+            services.AddMediatR(assembly);
+            services.AddAutoMapper(assembly);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -35,12 +61,17 @@ namespace ProductManager.Api
             {
                 app.UseDeveloperExceptionPage();
             }
+            IdentityModelEventSource.ShowPII = true;
+
+            app.UseCors("CorsPolicy");
 
             app.UseHttpsRedirection();
 
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.ConfigureSwagger(Configuration);
 
             app.UseEndpoints(endpoints =>
             {
