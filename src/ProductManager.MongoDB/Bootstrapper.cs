@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using ProductManager.Domain.Contracts;
+using ProductManager.MongoDB.Repositories;
 
 namespace ProductManager.MongoDB
 {
@@ -13,7 +14,7 @@ namespace ProductManager.MongoDB
 
             services.AddSingleton<IMongoClient>(new MongoClient(mongoDbSettings.ConnectionString));
             services.AddTransient(typeof(IBaseRepository<>), typeof(BaseRepository<>));
-            //services.AddTransient<IFriendRepository, FriendRepository>();
+            services.AddTransient<IProductRepository, ProductRepository>();
             services.AddSingleton(mongoDbSettings);
 
             return services;

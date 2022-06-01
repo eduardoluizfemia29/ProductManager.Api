@@ -15,8 +15,4 @@
     <ProjectReference Include="..\ProductManager.Domain\ProductManager.Domain.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Repositories\" />
-  </ItemGroup>
-
 </Project>
